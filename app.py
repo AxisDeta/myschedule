@@ -61,7 +61,10 @@ def safe_next_path(raw: str | None) -> str:
     if not value.startswith("/") or value.startswith("//"):
         return ""
     return value
-
+    
+@app.route("/healthz")
+def health():
+    return "ok", 200
 
 @dataclass(slots=True)
 class Settings:
