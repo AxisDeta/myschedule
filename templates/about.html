@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#0a0a0f; --surface:#111118; --surface2:#1a1a24; --border:#2a2a3a; --text:#e8e8f0; --muted:#9090a8; --accent:#6c63ff; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; min-height:100vh; padding:40px 20px; }
+    .shell { max-width:1100px; margin:0 auto; }
+    .top { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:24px; flex-wrap:wrap; }
+    h1 { font-family:'Syne',sans-serif; font-size:clamp(28px,4vw,42px); }
+    .sub { color:var(--muted); margin-top:8px; line-height:1.7; max-width:860px; }
+    .btn { border:1px solid var(--border); color:var(--text); background:transparent; border-radius:10px; padding:10px 14px; text-decoration:none; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
+    .grid { display:grid; gap:16px; }
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; }
+    .title { font-family:'Syne',sans-serif; font-size:22px; margin-bottom:10px; }
+    .copy { color:var(--muted); line-height:1.8; }
+    .list { display:grid; gap:10px; margin-top:12px; color:var(--muted); }
+    .list div { background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:14px; }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="top">
+      <div>
+        <h1>About</h1>
+        <div class="sub">Everything explanatory lives here so the main schedule stays clean.</div>
+      </div>
+      <a class="btn" href="{{ url_for('index') }}">Back to schedule</a>
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <div class="title">How The App Works</div>
+        <div class="copy">The schedule page is your live week. The app tracks the week in {{ app_timezone }}. When a new Monday starts, the previous week is archived and a fresh week begins. Your carry-forward note stays so you can resume cleanly.</div>
+      </section>
+
+      <section class="card">
+        <div class="title">Pages</div>
+        <div class="list">
+          <div><strong>Schedule:</strong> current week only.</div>
+          <div><strong>Past Weeks:</strong> archived weeks after rollover or manual reset.</div>
+          <div><strong>Compare Last 4:</strong> Gemini comparison across your recent archived weeks.</div>
+          <div><strong>Review Week:</strong> wins, misses, and adjustments for the current week.</div>
+          <div><strong>Edit Weekly Template:</strong> changes the recurring system itself.</div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="title">Main Controls</div>
+        <div class="list">
+          <div><strong>Mark done:</strong> marks a block complete.</div>
+          <div><strong>Make focus:</strong> marks the one block that matters most for that day.</div>
+          <div><strong>Next Important Thing:</strong> your resume note for later.</div>
+          <div><strong>Day Notes:</strong> notes for the selected day only.</div>
+          <div><strong>Archive this week and start fresh:</strong> saves the week into history and clears the live week.</div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="title">Principles</div>
+        <div class="list">
+          {% for paragraph in schedule_data.summary %}
+            <div>{{ paragraph }}</div>
+          {% endfor %}
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

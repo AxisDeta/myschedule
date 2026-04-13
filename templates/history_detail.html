@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>History Detail</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#0a0a0f; --surface:#111118; --border:#2a2a3a; --muted:#9090a8; --text:#e8e8f0; --accent:#6c63ff; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; min-height:100vh; padding:40px 20px; }
+    .shell { max-width:1100px; margin:0 auto; }
+    .top { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:24px; flex-wrap:wrap; }
+    h1 { font-family:'Syne',sans-serif; font-size:clamp(28px,4vw,42px); }
+    .sub { color:var(--muted); margin-top:8px; line-height:1.7; }
+    .btn { border:1px solid var(--border); color:var(--text); background:transparent; border-radius:10px; padding:10px 14px; text-decoration:none; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
+    .grid { display:grid; gap:16px; }
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; }
+    .day { font-family:'Syne',sans-serif; font-size:22px; margin-bottom:8px; }
+    .muted { color:var(--muted); }
+    .summary { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
+    .stat { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px; }
+    .stat strong { display:block; font-family:'Syne',sans-serif; font-size:24px; margin-bottom:4px; }
+    .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
+    .review-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; }
+    .review-card { background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:12px; padding:16px; }
+    .review-card strong { display:block; margin-bottom:8px; font-family:'Syne',sans-serif; font-size:18px; }
+    .flash { border-radius:12px; padding:12px 14px; margin-bottom:14px; }
+    .flash.success { border:1px solid rgba(67,233,123,.25); background:rgba(67,233,123,.08); color:#c9f8dc; }
+    .flash.error { border:1px solid rgba(255,138,133,.25); background:rgba(255,138,133,.08); color:#ffd2cf; }
+    .ai-actions { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:14px; }
+    .ai-btn { border:1px solid transparent; background:linear-gradient(135deg,var(--accent),#8b81ff); color:#fff; border-radius:10px; padding:10px 14px; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; cursor:pointer; }
+    .ai-list { margin-left:18px; }
+    .ai-list li { margin:10px 0; }
+    ul { margin-left:20px; }
+    li { margin:8px 0; }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="top">
+      <div>
+        <h1>{{ week_label_from_key(archive.week_key) }}</h1>
+        <div class="sub">Archived snapshot of that week. This page shows the saved completion state, day notes, carry-forward note, and weekly review that were captured when the week ended.</div>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <a class="btn" href="{{ url_for('history_compare_last_four') }}">Compare last 4 weeks</a>
+        <a class="btn" href="{{ url_for('history') }}">Back to history</a>
+      </div>
+    </div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash {{ category if category in ['success', 'error'] else 'success' }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    <div class="grid">
+      <section class="summary">
+        <div class="stat">
+          <strong>{{ archive_view.state.completed_blocks }}/{{ archive_view.state.total_blocks }}</strong>
+          <div class="muted">blocks completed</div>
+        </div>
+        <div class="stat">
+          <strong>{{ archive.created_at.strftime('%b %d, %Y %I:%M %p') if archive.created_at else 'Saved' }}</strong>
+          <div class="muted">archived at</div>
+        </div>
+      </section>
+      <section class="card">
+        <div class="day">AI Weekly Analysis</div>
+        <div class="muted">Use Gemini to analyze this completed week and suggest realistic adjustments for the next one.</div>
+        <div class="ai-actions">
+          {% if gemini_enabled %}
+            <form method="post" action="{{ url_for('history_analyze_ai', archive_id=archive.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
+              <button class="ai-btn" type="submit">{{ 'Refresh AI analysis' if ai_insight else 'Analyze this week' }}</button>
+            </form>
+          {% else %}
+            <div class="muted">Gemini is not configured yet. Add `GEMINI_API_KEY` in your `.env` file.</div>
+          {% endif %}
+          {% if ai_model_name %}
+            <div class="muted">Model: {{ ai_model_name }}{% if ai_updated_at %} | updated {{ ai_updated_at.strftime('%b %d, %Y %I:%M %p') }}{% endif %}</div>
+          {% endif %}
+        </div>
+        {% if ai_insight %}
+          <div class="review-grid" style="margin-top:16px;">
+            <div class="review-card" style="grid-column:1 / -1;">
+              <strong>Week Overview</strong>
+              <div class="muted">{{ ai_insight.week_overview }}</div>
+            </div>
+            <div class="review-card">
+              <strong>What Worked</strong>
+              {% if ai_insight.what_worked %}
+                <ul class="ai-list">
+                  {% for item in ai_insight.what_worked %}
+                    <li>{{ item }}</li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <div class="muted">No strengths were extracted.</div>
+              {% endif %}
+            </div>
+            <div class="review-card">
+              <strong>What Did Not Work</strong>
+              {% if ai_insight.what_did_not_work %}
+                <ul class="ai-list">
+                  {% for item in ai_insight.what_did_not_work %}
+                    <li>{{ item }}</li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <div class="muted">No weak points were extracted.</div>
+              {% endif %}
+            </div>
+            <div class="review-card">
+              <strong>Patterns</strong>
+              {% if ai_insight.patterns %}
+                <ul class="ai-list">
+                  {% for item in ai_insight.patterns %}
+                    <li>{{ item }}</li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <div class="muted">No patterns were extracted.</div>
+              {% endif %}
+            </div>
+            <div class="review-card">
+              <strong>Recommendations For Next Week</strong>
+              {% if ai_insight.recommendations_next_week %}
+                <ul class="ai-list">
+                  {% for item in ai_insight.recommendations_next_week %}
+                    <li>{{ item }}</li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <div class="muted">No recommendations were extracted.</div>
+              {% endif %}
+            </div>
+            <div class="review-card">
+              <strong>Keep Rule</strong>
+              <div class="muted">{{ ai_insight.keep_rule or 'No keep-rule recommendation yet.' }}</div>
+            </div>
+            <div class="review-card">
+              <strong>Change Rule</strong>
+              <div class="muted">{{ ai_insight.change_rule or 'No change-rule recommendation yet.' }}</div>
+            </div>
+            <div class="review-card" style="grid-column:1 / -1;">
+              <strong>Confidence Note</strong>
+              <div class="muted">{{ ai_insight.confidence_note or 'No confidence note was returned.' }}</div>
+            </div>
+          </div>
+        {% endif %}
+      </section>
+      <section class="card">
+        <div class="day">Week Stats</div>
+        <div class="stats-grid">
+          <div class="stat">
+            <strong>{{ archive_view.stats.total_hours }}</strong>
+            <div class="muted">total hours</div>
+          </div>
+          <div class="stat">
+            <strong>{{ archive_view.stats.deep_work_hours }}</strong>
+            <div class="muted">deep work hours</div>
+          </div>
+          <div class="stat">
+            <strong>{{ archive_view.stats.ml_project.done }}/{{ archive_view.stats.ml_project.total }}</strong>
+            <div class="muted">ML progress</div>
+          </div>
+          <div class="stat">
+            <strong>{{ archive_view.stats.stats.done }}/{{ archive_view.stats.stats.total }}</strong>
+            <div class="muted">Stats progress</div>
+          </div>
+          <div class="stat">
+            <strong>{{ archive_view.stats.cpp.done }}/{{ archive_view.stats.cpp.total }}</strong>
+            <div class="muted">C++ progress</div>
+          </div>
+        </div>
+      </section>
+      <section class="card">
+        <div class="day">Carry-forward</div>
+        <div class="muted">{{ archive_view.state.carry_forward_note or 'No carry-forward note saved.' }}</div>
+      </section>
+      <section class="card">
+        <div class="day">Weekly Review</div>
+        <div class="review-grid">
+          <div class="review-card">
+            <strong>Wins</strong>
+            <div class="muted">{{ archive_view.state.weekly_review.wins_text or 'No wins were saved for this week.' }}</div>
+          </div>
+          <div class="review-card">
+            <strong>Misses</strong>
+            <div class="muted">{{ archive_view.state.weekly_review.misses_text or 'No misses were saved for this week.' }}</div>
+          </div>
+          <div class="review-card">
+            <strong>Adjustments</strong>
+            <div class="muted">{{ archive_view.state.weekly_review.adjust_text or 'No adjustments were saved for this week.' }}</div>
+          </div>
+        </div>
+      </section>
+      {% for day in archive_view.days %}
+        <section class="card">
+          <div class="day">{{ day.name }}</div>
+          <div class="muted" style="margin-bottom:10px;">{{ day.focus }}</div>
+          <ul>
+            {% for block in day.blocks %}
+              {% set done = archive_view.state.blocks.get(day.key, {}).get(loop.index0|string) %}
+              <li>{{ '[Done] ' if done else '[Open] ' }}{{ block.title }}</li>
+            {% endfor %}
+          </ul>
+          <div class="muted" style="margin-top:12px;">Day note: {{ archive_view.state.notes.get(day.key, '') or 'No day note saved.' }}</div>
+        </section>
+      {% endfor %}
+    </div>
+  </main>
+</body>
+</html>

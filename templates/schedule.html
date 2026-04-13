@@ -1,0 +1,628 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ schedule_data.title }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --surface2: #1a1a24;
+      --border: #2a2a3a;
+      --border-light: #3a3a4a;
+      --accent-primary: #6c63ff;
+      --accent-tertiary: #43e97b;
+      --text: #e8e8f0;
+      --text-secondary: #9090a8;
+      --text-tertiary: #7070a0;
+      --learn-text: #378ADD;
+      --build-text: #639922;
+      --career-text: #BA7517;
+      --content-text: #7F77DD;
+      --health-text: #1D9E75;
+      --review-text: #888780;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(108, 99, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(108, 99, 255, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+      z-index: 0;
+    }
+    body.compact-mode .stat { padding: 16px; }
+    body.compact-mode .block { padding: 16px; }
+    .shell { position: relative; z-index: 1; min-height: 100vh; }
+    .header {
+      padding: 40px 48px 28px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(108, 99, 255, 0.05), transparent);
+    }
+    .header-tag {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent-primary);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .header-tag::before {
+      content: '';
+      width: 20px;
+      height: 1px;
+      background: var(--accent-primary);
+    }
+    .header h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(28px, 3vw, 42px);
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .main { padding: 36px 48px 48px; max-width: 1280px; margin: 0 auto; }
+    .top-action-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+    .legend, .day-header, .carry-panel, .notes-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+    .ghost-btn, .utility-tab, .block-toggle, .focus-btn, .notes-save, .logout-btn, .day-tab {
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .ghost-btn, .logout-btn, .utility-tab, .block-toggle {
+      border: 1px solid var(--border-light);
+      background: transparent;
+      color: var(--text-secondary);
+      padding: 9px 14px;
+    }
+    .notes-save {
+      border: 1px solid transparent;
+      color: #fff;
+      padding: 9px 14px;
+      background: linear-gradient(135deg, var(--accent-primary), #8b81ff);
+    }
+    .utility-tab.active {
+      color: var(--accent-tertiary);
+      border-color: rgba(67, 233, 123, 0.35);
+      background: rgba(67, 233, 123, 0.12);
+    }
+    .focus-btn {
+      border: 1px solid rgba(249, 168, 37, 0.28);
+      background: rgba(249, 168, 37, 0.08);
+      color: #f5c768;
+      padding: 8px 12px;
+    }
+    .focus-btn.active { background: rgba(249, 168, 37, 0.18); }
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+      padding: 20px;
+    }
+    .leg { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+    .leg-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      box-shadow: 0 0 12px currentColor;
+      flex-shrink: 0;
+    }
+    .week-nav {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+      padding: 12px;
+      background: rgba(17, 17, 24, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 100%;
+      overflow-x: auto;
+    }
+    .day-tab {
+      padding: 9px 18px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-tertiary);
+    }
+    .day-tab.active {
+      background: linear-gradient(135deg, var(--accent-primary), #8b81ff);
+      color: #fff;
+      box-shadow: 0 8px 24px rgba(108, 99, 255, 0.3);
+    }
+    .day-header { padding: 22px; margin-bottom: 24px; }
+    .day-title { font-family: 'Syne', sans-serif; font-size: 30px; margin-bottom: 8px; }
+    .day-subtitle { color: var(--text-tertiary); }
+    .summary-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      text-align: center;
+    }
+    .stat-num { font-family: 'Syne', sans-serif; font-size: 26px; color: var(--accent-primary); }
+    .stat-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      margin-top: 6px;
+    }
+    .blocks { display: flex; flex-direction: column; gap: 14px; }
+    .block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .block.done { border-color: rgba(67, 233, 123, 0.3); background: linear-gradient(135deg, rgba(67, 233, 123, 0.08), rgba(17, 17, 24, 0.96)); }
+    .block-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .block-body { flex: 1; }
+    .block-head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+    .block-title { font-family: 'Syne', sans-serif; font-size: 16px; }
+    .block-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .block-desc { color: var(--text-tertiary); margin-bottom: 12px; }
+    .block-hours {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid;
+      display: inline-block;
+    }
+    .focus-badge {
+      display: inline-flex;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(249, 168, 37, 0.12);
+      border: 1px solid rgba(249, 168, 37, 0.25);
+      color: #ffd883;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .pill-learn { background: rgba(55, 138, 221, 0.15); color: var(--learn-text); border-color: rgba(55, 138, 221, 0.3); }
+    .icon-learn { background: rgba(55, 138, 221, 0.1); border-color: var(--learn-text) !important; }
+    .pill-build { background: rgba(99, 153, 34, 0.15); color: var(--build-text); border-color: rgba(99, 153, 34, 0.3); }
+    .icon-build { background: rgba(99, 153, 34, 0.1); border-color: var(--build-text) !important; }
+    .pill-career { background: rgba(186, 117, 23, 0.15); color: var(--career-text); border-color: rgba(186, 117, 23, 0.3); }
+    .icon-career { background: rgba(186, 117, 23, 0.1); border-color: var(--career-text) !important; }
+    .pill-content { background: rgba(127, 119, 221, 0.15); color: var(--content-text); border-color: rgba(127, 119, 221, 0.3); }
+    .icon-content { background: rgba(127, 119, 221, 0.1); border-color: var(--content-text) !important; }
+    .pill-health { background: rgba(29, 158, 117, 0.15); color: var(--health-text); border-color: rgba(29, 158, 117, 0.3); }
+    .icon-health { background: rgba(29, 158, 117, 0.1); border-color: var(--health-text) !important; }
+    .pill-review { background: rgba(136, 135, 128, 0.15); color: var(--review-text); border-color: rgba(136, 135, 128, 0.3); }
+    .icon-review { background: rgba(136, 135, 128, 0.1); border-color: var(--review-text) !important; }
+    .carry-panel, .notes-panel { margin-top: 24px; padding: 20px; }
+    .notes-head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 12px; align-items: flex-start; }
+    .notes-title { font-family: 'Syne', sans-serif; font-size: 22px; }
+    .notes-input {
+      width: 100%;
+      min-height: 130px;
+      resize: vertical;
+      border-radius: 12px;
+      border: 1px solid var(--border-light);
+      background: var(--surface2);
+      color: var(--text);
+      padding: 14px 16px;
+      font: inherit;
+      line-height: 1.7;
+    }
+    .notes-status { margin-top: 10px; min-height: 20px; color: var(--text-tertiary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .inline-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .empty-state {
+      background: var(--surface);
+      border: 1px dashed var(--border-light);
+      color: var(--text-tertiary);
+      border-radius: 12px;
+      padding: 18px;
+      text-align: center;
+    }
+    @media (max-width: 860px) {
+      .header, .main { padding-left: 20px; padding-right: 20px; }
+      .top-action-row, .inline-actions, .block-actions { display: grid; grid-template-columns: 1fr; }
+      .notes-head, .block-head { flex-direction: column; }
+      .block-actions { justify-content: flex-start; }
+      .day-title { font-size: 24px; }
+      .ghost-btn, .logout-btn, .utility-tab, .block-toggle, .notes-save, .focus-btn {
+        min-height: 44px;
+        width: 100%;
+        justify-content: center;
+      }
+      .week-nav { gap: 10px; padding: 14px; }
+      .day-tab, .utility-tab { min-width: 92px; }
+      .carry-panel, .notes-panel, .legend, .day-header { padding-left: 16px; padding-right: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="header">
+      <div class="header-tag">Weekly Tracker</div>
+      <h1>{{ schedule_data.title }}</h1>
+      <div class="top-action-row">
+        <a class="ghost-btn" href="{{ url_for('history') }}">Past Weeks</a>
+        <a class="ghost-btn" href="{{ url_for('weekly_review') }}">Review Week</a>
+        <a class="ghost-btn" href="{{ url_for('ai_insights') }}">AI Insights</a>
+        <a class="ghost-btn" href="{{ url_for('about') }}">About</a>
+        <form method="post" action="{{ url_for('logout') }}" style="display:inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
+          <button class="logout-btn" type="submit">Logout</button>
+        </form>
+      </div>
+    </div>
+    <div class="main">
+      <div class="legend">
+        {% for item in schedule_data.legend %}
+          <div class="leg"><div class="leg-dot" style="background:{{ item.color }}"></div>{{ item.label }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="week-nav" id="nav"></div>
+
+      <div class="day-header">
+        <div class="day-title" id="dayTitle"></div>
+        <div class="day-subtitle" id="dayFocus"></div>
+      </div>
+
+      <div class="summary-bar" id="stats"></div>
+      <div class="blocks" id="blocks"></div>
+
+      <section class="carry-panel">
+        <div class="notes-head">
+          <div class="notes-title">Next Important Thing</div>
+          <button class="notes-save" type="button" onclick="saveCarryForward()">Save carry-forward</button>
+        </div>
+        <textarea class="notes-input" id="carryForwardNote" placeholder="What should I pick up first when I return?"></textarea>
+        <div class="notes-status" id="carryStatus"></div>
+      </section>
+
+      <section class="notes-panel">
+        <div class="notes-head">
+          <div class="notes-title">Day Notes</div>
+          <div class="inline-actions">
+            <button class="ghost-btn" type="button" onclick="resetWeek()">Archive this week and start fresh</button>
+            <button class="notes-save" type="button" onclick="saveNote()">Save day note</button>
+          </div>
+        </div>
+        <textarea class="notes-input" id="dayNote" placeholder="Write only what helps your future self continue the work."></textarea>
+        <div class="notes-status" id="noteStatus"></div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const scheduleData = {{ schedule_data|tojson }};
+    const initialState = {{ initial_state|tojson }};
+    const csrfToken = {{ csrf_token_value|tojson }};
+    const appTimezone = {{ app_timezone|tojson }};
+    const days = scheduleData.days;
+
+    const catMeta = {
+      learn: { pillClass: "pill-learn", iconClass: "icon-learn" },
+      build: { pillClass: "pill-build", iconClass: "icon-build" },
+      career: { pillClass: "pill-career", iconClass: "icon-career" },
+      content: { pillClass: "pill-content", iconClass: "icon-content" },
+      health: { pillClass: "pill-health", iconClass: "icon-health" },
+      review: { pillClass: "pill-review", iconClass: "icon-review" }
+    };
+
+    const blockState = initialState.blocks || {};
+    const notesState = initialState.notes || {};
+    const focusState = initialState.focus || {};
+    const preferences = initialState.preferences || {};
+    const carryState = { note: initialState.carry_forward_note || "" };
+    const noteInput = document.getElementById("dayNote");
+    const noteStatus = document.getElementById("noteStatus");
+    const carryInput = document.getElementById("carryForwardNote");
+    const carryStatus = document.getElementById("carryStatus");
+    let active = 0;
+
+    function dayShortToday() {
+      return new Intl.DateTimeFormat("en-US", { weekday: "short", timeZone: appTimezone }).format(new Date()).toLowerCase();
+    }
+
+    function todayIndex() {
+      const today = dayShortToday();
+      const match = days.findIndex((day) => day.short.toLowerCase() === today);
+      return match >= 0 ? match : 0;
+    }
+
+    function ensureDayState(dayKey) {
+      if (!blockState[dayKey]) blockState[dayKey] = {};
+      return blockState[dayKey];
+    }
+
+    function isCompleted(dayKey, blockIndex) {
+      return Boolean(ensureDayState(dayKey)[String(blockIndex)]);
+    }
+
+    function completedCount(dayKey) {
+      const day = days.find((item) => item.key === dayKey);
+      return day.blocks.filter((_, index) => isCompleted(dayKey, index)).length;
+    }
+
+    function weekCompletedCount() {
+      return days.reduce((sum, day) => sum + completedCount(day.key), 0);
+    }
+
+    function weekBlockCount() {
+      return days.reduce((sum, day) => sum + day.blocks.length, 0);
+    }
+
+    function trackProgress(trackName) {
+      let done = 0;
+      let total = 0;
+      days.forEach((day) => {
+        day.blocks.forEach((block, index) => {
+          if (block.track === trackName) {
+            total += 1;
+            if (isCompleted(day.key, index)) done += 1;
+          }
+        });
+      });
+      return { done, total };
+    }
+
+    function applyCompactMode() {
+      document.body.classList.toggle("compact-mode", Boolean(preferences.compact_mode));
+    }
+
+    function setNoteStatus(message, isError = false) {
+      noteStatus.textContent = message || "";
+      noteStatus.style.color = isError ? "#ff8a85" : "";
+    }
+
+    function setCarryStatus(message, isError = false) {
+      carryStatus.textContent = message || "";
+      carryStatus.style.color = isError ? "#ff8a85" : "";
+    }
+
+    function renderNav() {
+      const nav = document.getElementById("nav");
+      nav.innerHTML =
+        days.map((day, index) => `<button class="day-tab${index === active ? " active" : ""}" type="button" onclick="setDay(${index})">${day.short}</button>`).join("") +
+        `<button class="utility-tab" type="button" onclick="jumpToToday()">Today</button>` +
+        `<button class="utility-tab${preferences.compact_mode ? " active" : ""}" type="button" onclick="toggleCompactMode()">Compact</button>` +
+        `<button class="utility-tab${preferences.hide_completed ? " active" : ""}" type="button" onclick="toggleHideCompleted()">Hide done</button>`;
+    }
+
+    function render() {
+      renderNav();
+      applyCompactMode();
+      const day = days[active];
+      const totalHours = day.blocks.reduce((sum, block) => sum + Number(block.hours || 0), 0);
+      const gymBlock = day.blocks.find((block) => block.cat === "health");
+      const gymHours = gymBlock ? Number(gymBlock.hours || 0) : 0;
+      const workHours = totalHours - gymHours;
+      const doneCount = completedCount(day.key);
+      const weekDone = weekCompletedCount();
+      const weekTotal = weekBlockCount();
+      const mlTrack = trackProgress("ml_project");
+      const statsTrack = trackProgress("stats");
+      const cppTrack = trackProgress("cpp");
+
+      document.getElementById("dayTitle").textContent = day.name;
+      document.getElementById("dayFocus").textContent = day.focus;
+      document.getElementById("stats").innerHTML = `
+        <div class="stat"><div class="stat-num">${totalHours.toFixed(1)}</div><div class="stat-label">total hours</div></div>
+        <div class="stat"><div class="stat-num">${workHours.toFixed(1)}</div><div class="stat-label">deep work</div></div>
+        <div class="stat"><div class="stat-num">${doneCount}/${day.blocks.length}</div><div class="stat-label">today done</div></div>
+        <div class="stat"><div class="stat-num">${weekDone}/${weekTotal}</div><div class="stat-label">week done</div></div>
+        <div class="stat"><div class="stat-num">${mlTrack.done}/${mlTrack.total}</div><div class="stat-label">ml progress</div></div>
+        <div class="stat"><div class="stat-num">${statsTrack.done}/${statsTrack.total}</div><div class="stat-label">stats progress</div></div>
+        <div class="stat"><div class="stat-num">${cppTrack.done}/${cppTrack.total}</div><div class="stat-label">c++ progress</div></div>
+      `;
+
+      const visibleBlocks = day.blocks
+        .map((block, index) => ({ block, index }))
+        .filter(({ index }) => !preferences.hide_completed || !isCompleted(day.key, index));
+
+      document.getElementById("blocks").innerHTML = visibleBlocks.length ? visibleBlocks.map(({ block, index }) => {
+        const meta = catMeta[block.cat];
+        const done = isCompleted(day.key, index);
+        const focused = Number(focusState[day.key]) === index;
+        return `
+          <div class="block${done ? " done" : ""}">
+            <div class="block-icon ${meta.iconClass}">${block.icon}</div>
+            <div class="block-body">
+              ${focused ? `<div class="focus-badge">Top priority</div>` : ``}
+              <div class="block-head">
+                <div class="block-title">${block.title}</div>
+                <div class="block-actions">
+                  <button class="focus-btn${focused ? " active" : ""}" type="button" onclick="setFocus('${day.key}', ${index})">${focused ? "Focused" : "Make focus"}</button>
+                  <button class="block-toggle${done ? " active" : ""}" type="button" onclick="toggleBlock('${day.key}', ${index})">${done ? "Done" : "Mark done"}</button>
+                </div>
+              </div>
+              <div class="block-desc">${block.desc}</div>
+              <span class="block-hours ${meta.pillClass}">${block.hours}h</span>
+            </div>
+          </div>
+        `;
+      }).join("") : `<div class="empty-state">Everything for ${day.name} is done. Turn off \"Hide done\" if you want to review completed blocks.</div>`;
+
+      noteInput.value = notesState[day.key] || "";
+      carryInput.value = carryState.note || "";
+      setNoteStatus("");
+      setCarryStatus("");
+    }
+
+    function setDay(index) {
+      active = index;
+      render();
+    }
+
+    function jumpToToday() {
+      active = todayIndex();
+      render();
+    }
+
+    async function apiPost(url, payload) {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || data.ok === false) throw new Error(data.error || "Request failed.");
+      return data;
+    }
+
+    async function toggleBlock(dayKey, blockIndex) {
+      const dayState = ensureDayState(dayKey);
+      const current = Boolean(dayState[String(blockIndex)]);
+      dayState[String(blockIndex)] = !current;
+      render();
+      try {
+        await apiPost("/api/blocks/toggle", { day_key: dayKey, block_idx: blockIndex, completed: !current });
+      } catch (error) {
+        dayState[String(blockIndex)] = current;
+        render();
+        setNoteStatus(error.message, true);
+      }
+    }
+
+    async function setFocus(dayKey, blockIndex) {
+      focusState[dayKey] = blockIndex;
+      render();
+      try {
+        await apiPost("/api/focus", { day_key: dayKey, block_idx: blockIndex });
+      } catch (error) {
+        setNoteStatus(error.message, true);
+      }
+    }
+
+    async function saveNote() {
+      const day = days[active];
+      const note = noteInput.value;
+      notesState[day.key] = note;
+      setNoteStatus("Saving...");
+      try {
+        await apiPost("/api/notes", { day_key: day.key, note: note });
+        setNoteStatus("Saved");
+      } catch (error) {
+        setNoteStatus(error.message, true);
+      }
+    }
+
+    async function saveCarryForward() {
+      carryState.note = carryInput.value;
+      setCarryStatus("Saving...");
+      try {
+        await apiPost("/api/carry-forward", { note: carryState.note });
+        setCarryStatus("Saved");
+      } catch (error) {
+        setCarryStatus(error.message, true);
+      }
+    }
+
+    async function toggleCompactMode() {
+      preferences.compact_mode = !Boolean(preferences.compact_mode);
+      render();
+      try {
+        await apiPost("/api/preferences", { compact_mode: Boolean(preferences.compact_mode), hide_completed: Boolean(preferences.hide_completed) });
+      } catch (error) {
+        preferences.compact_mode = !Boolean(preferences.compact_mode);
+        render();
+        setNoteStatus(error.message, true);
+      }
+    }
+
+    async function toggleHideCompleted() {
+      preferences.hide_completed = !Boolean(preferences.hide_completed);
+      render();
+      try {
+        await apiPost("/api/preferences", { compact_mode: Boolean(preferences.compact_mode), hide_completed: Boolean(preferences.hide_completed) });
+      } catch (error) {
+        preferences.hide_completed = !Boolean(preferences.hide_completed);
+        render();
+        setNoteStatus(error.message, true);
+      }
+    }
+
+    async function resetWeek() {
+      const confirmed = window.confirm("Archive this week and start fresh? Current checkmarks, focus markers, day notes, and weekly review will move into history.");
+      if (!confirmed) return;
+      setNoteStatus("Resetting...");
+      try {
+        const result = await apiPost("/api/week/reset", {});
+        Object.keys(blockState).forEach((key) => { blockState[key] = {}; });
+        Object.keys(notesState).forEach((key) => { notesState[key] = ""; });
+        Object.keys(focusState).forEach((key) => { delete focusState[key]; });
+        render();
+        setNoteStatus(result.archived ? "Week archived and reset" : "Week was already empty, so it was just reset");
+      } catch (error) {
+        setNoteStatus(error.message, true);
+      }
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+        event.preventDefault();
+        saveNote();
+      }
+    });
+
+    noteInput.addEventListener("blur", () => {
+      const day = days[active];
+      if ((notesState[day.key] || "") !== noteInput.value) saveNote();
+    });
+
+    carryInput.addEventListener("blur", () => {
+      if ((carryState.note || "") !== carryInput.value) saveCarryForward();
+    });
+
+    active = todayIndex();
+    render();
+  </script>
+</body>
+</html>

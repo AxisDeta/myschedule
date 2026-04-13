@@ -1,0 +1,102 @@
+{
+  "title": "John's Weekly System",
+  "subtitle": "A live weekly tracker for your recurring Monday to Sunday schedule.",
+  "legend": [
+    { "label": "Learning", "color": "#378ADD" },
+    { "label": "Building", "color": "#639922" },
+    { "label": "Career ops", "color": "#BA7517" },
+    { "label": "Content", "color": "#7F77DD" },
+    { "label": "Health", "color": "#1D9E75" },
+    { "label": "Review", "color": "#888780" }
+  ],
+  "summary": [
+    "Use this as the live week tracker, not as a dated one-off plan.",
+    "NLP/AI is now the main learning track. Deep learning is no longer part of the recurring system.",
+    "The ML project runs every day except Sunday. Career ops run six days a week. Content stays batched."
+  ],
+  "days": [
+    {
+      "key": "mon",
+      "name": "Monday",
+      "short": "Mon",
+      "focus": "NLP/AI foundation plus ML project momentum",
+      "blocks": [
+        { "cat": "learn", "icon": "📘", "track": "nlp_ai", "title": "NLP / AI core session", "desc": "Study the current module, take notes, and implement at least one key idea.", "hours": 2.5 },
+        { "cat": "build", "icon": "⚙️", "track": "ml_project", "title": "ML project feature work", "desc": "Push the credit default project forward with real implementation work.", "hours": 2 },
+        { "cat": "career", "icon": "📨", "title": "Applications and outreach", "desc": "Send tailored applications and a few focused messages.", "hours": 1.5 },
+        { "cat": "health", "icon": "🏋️", "title": "Gym or movement", "desc": "Keep the body slot protected.", "hours": 1.5 }
+      ]
+    },
+    {
+      "key": "tue",
+      "name": "Tuesday",
+      "short": "Tue",
+      "focus": "Stats, ML project, and C++",
+      "blocks": [
+        { "cat": "learn", "icon": "📗", "track": "stats", "title": "Statistics with Python", "desc": "Work through one concept cluster slowly and code along.", "hours": 2 },
+        { "cat": "build", "icon": "⚙️", "track": "ml_project", "title": "ML project experimentation", "desc": "Run experiments, compare results, and note what changed.", "hours": 2 },
+        { "cat": "learn", "icon": "💻", "track": "cpp", "title": "C++ focused session", "desc": "One topic at a time. Keep it steady.", "hours": 1.5 },
+        { "cat": "career", "icon": "💡", "title": "Product or freelance push", "desc": "Build something small or respond to real opportunities.", "hours": 1.5 }
+      ]
+    },
+    {
+      "key": "wed",
+      "name": "Wednesday",
+      "short": "Wed",
+      "focus": "NLP/AI implementation and content planning",
+      "blocks": [
+        { "cat": "learn", "icon": "📘", "track": "nlp_ai", "title": "NLP / AI implementation", "desc": "Turn this week's concepts into code or examples.", "hours": 2.5 },
+        { "cat": "build", "icon": "⚙️", "track": "ml_project", "title": "ML project system improvement", "desc": "Work on reproducibility, tracking, evaluation flow, or cleanup.", "hours": 1.5 },
+        { "cat": "content", "icon": "🎬", "title": "TikTok planning", "desc": "Plan the weekly post. No recording yet.", "hours": 0.5 },
+        { "cat": "career", "icon": "📨", "title": "Applications and follow-ups", "desc": "Keep the campaign moving.", "hours": 1.5 }
+      ]
+    },
+    {
+      "key": "thu",
+      "name": "Thursday",
+      "short": "Thu",
+      "focus": "Stats, ML project, and C++ consistency",
+      "blocks": [
+        { "cat": "learn", "icon": "📗", "track": "stats", "title": "Statistics with Python", "desc": "Second stats session of the week.", "hours": 2 },
+        { "cat": "build", "icon": "⚙️", "track": "ml_project", "title": "ML project training or evaluation", "desc": "Use this slot for training, comparisons, or metrics review.", "hours": 2 },
+        { "cat": "learn", "icon": "💻", "track": "cpp", "title": "C++ session", "desc": "Keep the streak alive with another calm block.", "hours": 1.5 },
+        { "cat": "career", "icon": "📨", "title": "Outreach block", "desc": "Refine positioning and keep the pipeline warm.", "hours": 1.5 }
+      ]
+    },
+    {
+      "key": "fri",
+      "name": "Friday",
+      "short": "Fri",
+      "focus": "NLP/AI consolidation and weekly review",
+      "blocks": [
+        { "cat": "learn", "icon": "📘", "track": "nlp_ai", "title": "NLP / AI consolidation", "desc": "Review the week's learning and set up next week cleanly.", "hours": 2 },
+        { "cat": "build", "icon": "⚙️", "track": "ml_project", "title": "ML project checkpoint", "desc": "Ship one visible improvement and log the progress.", "hours": 2 },
+        { "cat": "career", "icon": "📨", "title": "Applications and campaign review", "desc": "Check what moved and what needs another push.", "hours": 1 },
+        { "cat": "review", "icon": "🗒️", "title": "Weekly review", "desc": "Short reset: wins, misses, and adjustments.", "hours": 0.5 }
+      ]
+    },
+    {
+      "key": "sat",
+      "name": "Saturday",
+      "short": "Sat",
+      "focus": "Batched content plus C++ and build time",
+      "blocks": [
+        { "cat": "content", "icon": "🎬", "title": "TikTok record and post", "desc": "Batch the weekly post here so content stays contained.", "hours": 2 },
+        { "cat": "content", "icon": "📺", "title": "YouTube planning or scripting", "desc": "Develop ideas and scripts in batches.", "hours": 1.5 },
+        { "cat": "learn", "icon": "💻", "track": "cpp", "title": "C++ study session", "desc": "Third weekly C++ block.", "hours": 1.5 },
+        { "cat": "career", "icon": "💡", "title": "Product or freelance build block", "desc": "Ship something real that can create leverage.", "hours": 1.5 }
+      ]
+    },
+    {
+      "key": "sun",
+      "name": "Sunday",
+      "short": "Sun",
+      "focus": "Light review, preview, and reset",
+      "blocks": [
+        { "cat": "learn", "icon": "📗", "track": "stats", "title": "Statistics review session", "desc": "Review notes and settle the week's stats concepts.", "hours": 1.5 },
+        { "cat": "learn", "icon": "📘", "track": "nlp_ai", "title": "NLP / AI preview", "desc": "Light preview only so Monday opens cleanly.", "hours": 1 },
+        { "cat": "review", "icon": "🗒️", "title": "Weekly reset", "desc": "Look ahead and protect the next week from chaos.", "hours": 0.5 }
+      ]
+    }
+  ]
+}

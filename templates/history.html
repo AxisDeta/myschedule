@@ -1,0 +1,53 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>History</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#0a0a0f; --surface:#111118; --border:#2a2a3a; --muted:#9090a8; --text:#e8e8f0; --accent:#6c63ff; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; min-height:100vh; padding:40px 20px; }
+    .shell { max-width:980px; margin:0 auto; }
+    .top { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:24px; flex-wrap:wrap; }
+    h1 { font-family:'Syne',sans-serif; font-size:clamp(28px,4vw,42px); }
+    .sub { color:var(--muted); margin-top:8px; line-height:1.7; }
+    .btn { border:1px solid var(--border); color:var(--text); background:transparent; border-radius:10px; padding:10px 14px; text-decoration:none; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
+    .list { display:grid; gap:14px; }
+    .row { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; display:flex; justify-content:space-between; gap:16px; align-items:center; flex-wrap:wrap; }
+    .title { font-family:'Syne',sans-serif; font-size:20px; }
+    .meta { color:var(--muted); font-size:13px; margin-top:6px; }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="top">
+      <div>
+        <h1>Past Weeks</h1>
+        <div class="sub">Each row here is a finished week. Open one to see what got done, what stayed open, the notes you left yourself, and the review captured for that week.</div>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <a class="btn" href="{{ url_for('history_compare_last_four') }}">Compare last 4 weeks</a>
+        <a class="btn" href="{{ url_for('index') }}">Back to schedule</a>
+      </div>
+    </div>
+    <div class="list">
+      {% if rows %}
+        {% for row in rows %}
+          <div class="row">
+            <div>
+              <div class="title">{{ week_label_from_key(row.week_key) }}</div>
+              <div class="meta">{{ row.completed_blocks }}/{{ row.total_blocks }} blocks done{% if row.created_at %} | archived {{ row.created_at.strftime('%b %d, %Y %I:%M %p') }}{% endif %}</div>
+            </div>
+            <a class="btn" href="{{ url_for('history_detail', archive_id=row.id) }}">Open details</a>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="row"><div class="meta">No archived weeks yet. Once a week is reset or rolls over, it will appear here.</div></div>
+      {% endif %}
+    </div>
+  </main>
+</body>
+</html>
+

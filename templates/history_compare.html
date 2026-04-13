@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compare Last 4 Weeks</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#0a0a0f; --surface:#111118; --border:#2a2a3a; --muted:#9090a8; --text:#e8e8f0; --accent:#6c63ff; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; min-height:100vh; padding:40px 20px; }
+    .shell { max-width:1100px; margin:0 auto; }
+    .top { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:24px; flex-wrap:wrap; }
+    h1 { font-family:'Syne',sans-serif; font-size:clamp(28px,4vw,42px); }
+    .sub { color:var(--muted); margin-top:8px; line-height:1.7; max-width:880px; }
+    .btn { border:1px solid var(--border); color:var(--text); background:transparent; border-radius:10px; padding:10px 14px; text-decoration:none; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
+    .ai-btn { border:1px solid transparent; background:linear-gradient(135deg,var(--accent),#8b81ff); color:#fff; border-radius:10px; padding:10px 14px; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; cursor:pointer; }
+    .grid { display:grid; gap:16px; }
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; }
+    .day { font-family:'Syne',sans-serif; font-size:22px; margin-bottom:8px; }
+    .muted { color:var(--muted); }
+    .flash { border-radius:12px; padding:12px 14px; margin-bottom:14px; }
+    .flash.success { border:1px solid rgba(67,233,123,.25); background:rgba(67,233,123,.08); color:#c9f8dc; }
+    .flash.error { border:1px solid rgba(255,138,133,.25); background:rgba(255,138,133,.08); color:#ffd2cf; }
+    .weeks { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:12px; }
+    .week-card { background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:12px; padding:16px; }
+    .week-card strong { display:block; margin-bottom:6px; font-family:'Syne',sans-serif; font-size:17px; }
+    .meta { color:var(--muted); font-size:13px; line-height:1.7; }
+    .review-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; }
+    .review-card { background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:12px; padding:16px; }
+    .review-card strong { display:block; margin-bottom:8px; font-family:'Syne',sans-serif; font-size:18px; }
+    ul { margin-left:20px; }
+    li { margin:8px 0; }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="top">
+      <div>
+        <h1>Compare Last 4 Weeks</h1>
+        <div class="sub">This page compares your most recent archived weeks and uses Gemini to spot recurring strengths, breakdowns, and the most useful adjustments for the next week. It only uses archived weeks, not the current live week.</div>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <a class="btn" href="{{ url_for('history') }}">Back to history</a>
+        <a class="btn" href="{{ url_for('index') }}">Back to schedule</a>
+      </div>
+    </div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash {{ category if category in ['success', 'error'] else 'success' }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    <div class="grid">
+      <section class="card">
+        <div class="day">Weeks Included</div>
+        {% if rows %}
+          <div class="weeks">
+            {% for row in rows %}
+              <div class="week-card">
+                <strong>{{ week_label_from_key(row.week_key) }}</strong>
+                <div class="meta">Archived {% if row.created_at %}{{ row.created_at.strftime('%b %d, %Y %I:%M %p') }}{% else %}earlier{% endif %}</div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="muted">No archived weeks yet, so comparison is not available.</div>
+        {% endif %}
+      </section>
+
+      <section class="card">
+        <div class="day">AI Multi-Week Comparison</div>
+        <div class="muted">This looks across your latest archived weeks and focuses on recurring signals instead of one-off noise.</div>
+        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:14px;">
+          {% if gemini_enabled and rows|length >= 2 %}
+            <form method="post" action="{{ url_for('history_compare_last_four_analyze') }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
+              <button class="ai-btn" type="submit">{{ 'Refresh comparison' if compare_insight else 'Compare with Gemini' }}</button>
+            </form>
+          {% elif not gemini_enabled %}
+            <div class="muted">Gemini is not configured yet. Add `GEMINI_API_KEY` in your `.env` file.</div>
+          {% else %}
+            <div class="muted">You need at least 2 archived weeks before comparison becomes useful.</div>
+          {% endif %}
+          {% if ai_model_name %}
+            <div class="muted">Model: {{ ai_model_name }}{% if ai_updated_at %} | updated {{ ai_updated_at.strftime('%b %d, %Y %I:%M %p') }}{% endif %}</div>
+          {% endif %}
+        </div>
+        {% if compare_insight %}
+          <div class="review-grid" style="margin-top:16px;">
+            <div class="review-card" style="grid-column:1 / -1;">
+              <strong>Summary</strong>
+              <div class="muted">{{ compare_insight.summary }}</div>
+            </div>
+            <div class="review-card">
+              <strong>Recurring Strengths</strong>
+              {% if compare_insight.recurring_strengths %}
+                <ul>
+                  {% for item in compare_insight.recurring_strengths %}
+                    <li>{{ item }}</li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <div class="muted">No strengths were extracted.</div>
+              {% endif %}
+            </div>
+            <div class="review-card">
+              <strong>Recurring Breakdowns</strong>
+              {% if compare_insight.recurring_breakdowns %}
+                <ul>
+                  {% for item in compare_insight.recurring_breakdowns %}
+                    <li>{{ item }}</li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <div class="muted">No recurring breakdowns were extracted.</div>
+              {% endif %}
+            </div>
+            <div class="review-card">
+              <strong>Patterns Across Weeks</strong>
+              {% if compare_insight.patterns_across_weeks %}
+                <ul>
+                  {% for item in compare_insight.patterns_across_weeks %}
+                    <li>{{ item }}</li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <div class="muted">No cross-week patterns were extracted.</div>
+              {% endif %}
+            </div>
+            <div class="review-card">
+              <strong>Next Week Adjustments</strong>
+              {% if compare_insight.next_week_adjustments %}
+                <ul>
+                  {% for item in compare_insight.next_week_adjustments %}
+                    <li>{{ item }}</li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <div class="muted">No next-week adjustments were extracted.</div>
+              {% endif %}
+            </div>
+            <div class="review-card">
+              <strong>Keep Doing</strong>
+              <div class="muted">{{ compare_insight.keep_doing or 'No keep-doing recommendation yet.' }}</div>
+            </div>
+            <div class="review-card">
+              <strong>Stop Doing</strong>
+              <div class="muted">{{ compare_insight.stop_doing or 'No stop-doing recommendation yet.' }}</div>
+            </div>
+            <div class="review-card" style="grid-column:1 / -1;">
+              <strong>Watch Item</strong>
+              <div class="muted">{{ compare_insight.watch_item or 'No watch item was returned.' }}</div>
+            </div>
+          </div>
+        {% endif %}
+      </section>
+    </div>
+  </main>
+</body>
+</html>
