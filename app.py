@@ -1630,4 +1630,4 @@ def schedule_editor_save():
 if __name__ == "__main__":
     host = _env("HOST", "127.0.0.1")
     port = int(_env("PORT", "5000"))
-    app.run(host=host, port=port, debug=True)
+    app.run(host=host, port=port, debug=False)

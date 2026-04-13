@@ -1,0 +1,45 @@
+services:
+  - type: web
+    name: portable-schedule-app
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    healthCheckPath: /healthz
+    envVars:
+      - key: FLASK_SECRET
+        sync: false
+      - key: APP_BASE_URL
+        sync: false
+      - key: APP_TIMEZONE
+        value: Africa/Nairobi
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REDIRECT_URI
+        sync: false
+      - key: GOOGLE_ALLOWED_EMAILS
+        sync: false
+      - key: MYSQL_HOST
+        sync: false
+      - key: MYSQL_PORT
+        value: "3306"
+      - key: MYSQL_DATABASE
+        sync: false
+      - key: MYSQL_USER
+        sync: false
+      - key: MYSQL_PASSWORD
+        sync: false
+      - key: MYSQL_SSL_CA
+        sync: false
+      - key: MYSQL_SSL_DISABLED
+        value: "false"
+      - key: MYSQL_CONNECT_TIMEOUT
+        value: "10"
+      - key: MYSQL_USE_POOL
+        value: "false"
+      - key: SCHEDULE_TABLE_PREFIX
+        value: john_schedule_
+      - key: GEMINI_API_KEY
+        sync: false
