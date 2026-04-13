@@ -25,6 +25,7 @@ except Exception:  # pragma: no cover - dependency may not be installed yet
 ROOT = Path(__file__).resolve().parent
 load_dotenv(ROOT / ".env")
 
+app = Flask(__name__)
 
 def _env(key: str, default: str = "") -> str:
     value = os.getenv(key, default)
@@ -1627,7 +1628,3 @@ def schedule_editor_save():
     return redirect(url_for("schedule_editor"))
 
 
-if __name__ == "__main__":
-    host = _env("HOST", "127.0.0.1")
-    port = int(_env("PORT", "5000"))
-    app.run(host=host, port=port, debug=False)
